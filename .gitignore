@@ -1,0 +1,46 @@
+# Root-level files that app/.gitignore cannot cover
+/.gradle/
+/.kotlin/
+/build/
+/local.properties
+/.idea/
+/*.iml
+/out/
+/bin/
+/.vscode/
+/captures/
+/.externalNativeBuild/
+/.cxx/
+/*.apk
+/*.aab
+/*.hprof
+/*.jks
+/*.keystore
+/*.log
+/.DS_Store
+
+# Generated files not covered by app/.gitignore
+*.class
+*.ap_
+*.dex
+
+# Private keys and local environment files
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+
+# JVM crash reports
+hs_err_pid*
+replay_pid*
+
+# Operating-system metadata
+Thumbs.db
+Desktop.ini
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.swp
+*~
