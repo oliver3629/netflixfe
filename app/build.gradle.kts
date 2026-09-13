@@ -50,12 +50,16 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     // Navigation
+    implementation(libs.androidx.navigation.compose)
 
     // ViewModel
 
     // Hilt
 
     // Retrofit & Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
 
     // Coil for images
 

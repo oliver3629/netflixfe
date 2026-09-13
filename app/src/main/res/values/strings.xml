@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Netflix</string>
+    <string name="home">Home</string>
+    <string name="my_netflix">My Netflix</string>
 </resources>
