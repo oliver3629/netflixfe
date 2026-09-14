@@ -7,13 +7,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
-// Temporary destination for the Home tab.
+// Temporary Home UI that proves MVVM data flow works.
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchHomeFeed()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,6 +43,22 @@ fun HomeScreen() {
             style = MaterialTheme.typography.titleLarge
         )
 
-        Text(text = "The home feed will render here in the next class.")
+        Text(text = "Architecture checkpoint")
+
+        when (val state = uiState) {
+            HomeUiState.Loading -> {
+                Text(text = "Loading home feed...")
+            }
+
+            is HomeUiState.Error -> {
+                Text(text = "Unable to load home feed: ${state.message}")
+            }
+
+            is HomeUiState.Success -> {
+                Text(text = "Top recommendation: ${state.topRecommended?.title ?: "None"}")
+                Text(text = "Sections loaded: ${state.sections.size}")
+                Text(text = "Data flows through Hilt, HomeRepository, and HomeViewModel.")
+            }
+        }
     }
 }

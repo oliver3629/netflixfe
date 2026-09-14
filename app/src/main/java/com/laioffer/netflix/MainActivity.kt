@@ -1,6 +1,5 @@
 package com.laioffer.netflix
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -26,16 +25,23 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.laioffer.netflix.navigation.NetflixNavHost
 import com.laioffer.netflix.navigation.Screen
-import com.laioffer.netflix.network.NetworkModuleNoDi
+import com.laioffer.netflix.network.NetworkApi
 import com.laioffer.netflix.ui.components.BottomNavigationBar
 import com.laioffer.netflix.ui.theme.NetflixTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 private const val TAG = "MainActivity"
 private const val NETWORK_TAG = "Network"
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var networkApi: NetworkApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate")
@@ -47,23 +53,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Creates one NavController instance for this activity's Compose tree.
                     val navController = rememberNavController()
-
-                    // Watches the back stack so Compose can react when the destination changes.
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-
-                    // Reads the current route, such as "home" or "profile".
-                    val currentRoute = navBackStackEntry?.destination?.route
-
-                    // Lists the top-level tabs that should appear in the bottom bar.
                     val bottomBarScreens = listOf(
                         Screen.BottomBarScreen.Home,
                         Screen.BottomBarScreen.Profile
                     )
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-                    // Hides the bottom bar for future non-tab routes like detail pages.
+                    // Reads the current route, such as "home" or "profile".
+                    val currentRoute = navBackStackEntry?.destination?.route
                     val isTopLevelRoute = bottomBarScreens.any { it.route == currentRoute }
+
+//                    Column(
+//                        modifier = Modifier.fillMaxSize()
+//                    ) {
+//                        NetflixNavHost(navController = navController)
+//                        BottomNavigationBar(
+//                            bottomBarScreens,
+//                            currentRoute,
+//                            navController
+//                        )
+//                    }
 
                     Scaffold(
                         bottomBar = {
@@ -81,18 +91,18 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(paddingValues)
                         )
                     }
+
                 }
+
             }
         }
-
     }
 
-    // Calls the backend once so Logcat proves Retrofit is connected.
     private fun logHomeResponse() {
         lifecycleScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    NetworkModuleNoDi.api.getHome().execute()
+                    networkApi.getHome().execute()
                 }
 
                 if (response.isSuccessful) {
@@ -105,6 +115,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     override fun onStart() {
         super.onStart()
