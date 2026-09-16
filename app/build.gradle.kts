@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.okhttp)
 
     // Coil for images
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Media3 (ExoPlayer) for video
 
