@@ -4,4 +4,9 @@
     <string name="my_netflix">My Netflix</string>
     <string name="play">Play</string>
     <string name="retry">Retry</string>
+    <string name="metadata_separator">•</string>
+    <string name="episode_number_title">%1$d. %2$s</string>
+    <string name="netflix_brand">NETFLIX</string>
+    <string name="close">Close</string>
+    <string name="episodes">Episodes</string>
 </resources>
