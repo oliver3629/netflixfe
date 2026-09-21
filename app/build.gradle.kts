@@ -74,6 +74,9 @@ dependencies {
     // Media3 (ExoPlayer) for video
 
     // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     // Testing
     testImplementation(libs.junit)

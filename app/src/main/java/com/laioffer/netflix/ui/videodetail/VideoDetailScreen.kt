@@ -1,5 +1,6 @@
 package com.laioffer.netflix.ui.videodetail
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,9 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,24 +45,34 @@ import com.laioffer.netflix.ui.components.ErrorContent
 import com.laioffer.netflix.ui.components.LoadingContent
 import com.laioffer.netflix.ui.theme.Spacings
 
-// Detail screen for one selected movie or TV show.
+// Temporary checkpoint screen that proves Navigation passes the selected id.
 @Composable
 fun VideoDetailScreen(
     videoId: String,
     onBackClick: () -> Unit,
     viewModel: VideoDetailViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(videoId) {
         viewModel.fetchVideoDetail(videoId)
     }
 
+    val loadedVideo = (uiState as? VideoDetailUiState.Success)?.video
+    LaunchedEffect(loadedVideo?.id) {
+        loadedVideo?.let {
+            viewModel.fetchFavoriteStatus(it)
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
-            VideoDetailHeader(onBackClick = onBackClick)
+            VideoDetailHeader(
+                onBackClick = onBackClick
+            )
         }
 
         when (val state = uiState) {
@@ -71,44 +83,121 @@ fun VideoDetailScreen(
                     onRetry = { viewModel.fetchVideoDetail(videoId) }
                 )
             }
-            is VideoDetailUiState.Success -> {
-                item {
-                    VideoDetailPoster(video = state.video)
-                }
-                item {
-                    VideoInfo(video = state.video)
-                }
-                if (state.video.type == VideoType.MOVIE) {
-                    item {
-                        PlayButton()
+
+            is VideoDetailUiState.Success -> item {
+                VideoDetailSuccessContent(
+                    state = state,
+                    onFavoriteClick = {
+                        Log.d("VideoDetailScreen", "Favorite button clicked")
+                        viewModel.toggleFavorite()
                     }
-                }
-
-                item {
-                    Text(
-                        text = state.video.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(horizontal = Spacings.two, vertical = Spacings.one)
-                    )
-                }
-
-                if (state.video.type == VideoType.TV_SHOW && state.episodes.isNotEmpty()) {
-                    item { EpisodesHeader() }
-                    items(state.episodes) { episode ->
-                        EpisodeItem(
-                            episode = episode,
-                            modifier = Modifier.padding(horizontal = Spacings.two, vertical = Spacings.one)
-                        )
-                    }
-                }
-
+                )
             }
+        }
+
+    }
+}
+
+// Success content is stateless: it only renders the ViewModel state it receives.
+@Composable
+private fun VideoDetailSuccessContent(
+    state: VideoDetailUiState.Success,
+    onFavoriteClick: () -> Unit = {}
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        VideoDetailPoster(video = state.video)
+        VideoInfo(
+            video = state.video,
+            isFavorite = state.isFavorite,
+            onFavoriteClick = onFavoriteClick
+        )
+
+        if (state.video.type == VideoType.MOVIE) {
+            PlayButton()
+        }
+
+        Text(
+            text = state.video.description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(horizontal = Spacings.two, vertical = Spacings.one)
+        )
+
+        if (state.video.type == VideoType.TV_SHOW && state.episodes.isNotEmpty()) {
+            EpisodesSection(episodes = state.episodes)
         }
     }
 }
 
-// Placeholder button for a future playback class.
+
+@Composable
+private fun EpisodesSection(episodes: List<Episode>) {
+    Column(
+        modifier = Modifier.padding(Spacings.two)
+    ) {
+        Text(
+            text = stringResource(R.string.episodes),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = Spacings.two)
+        )
+
+        episodes.forEach { episode ->
+            EpisodeItem(episode = episode)
+            Spacer(modifier = Modifier.height(Spacings.two))
+
+        }
+
+    }
+}
+
+// One row in the TV-show episode list.
+@Composable
+private fun EpisodeItem(
+    episode: Episode
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        AsyncImage(
+            model = episode.thumbnailUrl,
+            contentDescription = episode.title,
+            modifier = Modifier
+                .width(EpisodeThumbWidth)
+                .height(EpisodeThumbHeight),
+            contentScale = ContentScale.Crop
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = Spacings.two),
+            verticalArrangement = Arrangement.spacedBy(Spacings.half)
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.episode_number_title,
+                    episode.episodeNumber,
+                    episode.title
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = episode.duration,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = episode.description,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+
 @Composable
 private fun PlayButton() {
     Button(
@@ -126,6 +215,7 @@ private fun PlayButton() {
     }
     Spacer(modifier = Modifier.height(Spacings.two))
 }
+
 
 // Header keeps the brand visible and gives students a back/close action.
 @Composable
@@ -184,17 +274,39 @@ private fun VideoDetailPoster(video: Video) {
 
 // Title and metadata shown below the poster.
 @Composable
-private fun VideoInfo(video: Video) {
+private fun VideoInfo(
+    video: Video,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit
+) {
     Column(
         modifier = Modifier.padding(Spacings.two)
     ) {
-        Text(
-            text = video.title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = video.title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(FavoriteIconSize)
+                    .clickable(onClick = onFavoriteClick),
+                tint = if (isFavorite) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+        }
         Spacer(modifier = Modifier.height(Spacings.one))
 
         val metadataLabels = listOfNotNull(
@@ -212,67 +324,9 @@ private fun VideoInfo(video: Video) {
     }
 }
 
-// Section title shown above TV-show episodes.
-@Composable
-private fun EpisodesHeader() {
-    Text(
-        text = stringResource(R.string.episodes),
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(horizontal = Spacings.two, vertical = Spacings.one)
-    )
-}
-
-// One row in the TV-show episode list.
-@Composable
-private fun EpisodeItem(
-    episode: Episode,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        AsyncImage(
-            model = episode.thumbnailUrl,
-            contentDescription = episode.title,
-            modifier = Modifier
-                .width(EpisodeThumbWidth)
-                .height(EpisodeThumbHeight),
-            contentScale = ContentScale.Crop
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = Spacings.two),
-            verticalArrangement = Arrangement.spacedBy(Spacings.half)
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.episode_number_title,
-                    episode.episodeNumber,
-                    episode.title
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = episode.duration,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = episode.description,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2
-            )
-        }
-    }
-}
-
 private val PosterHeight = 300.dp
 private val VideoDetailHeaderIconSize = 32.dp
 private val PlayButtonHeight = 48.dp
 private val EpisodeThumbWidth = 120.dp
 private val EpisodeThumbHeight = 80.dp
+private val FavoriteIconSize = 24.dp
