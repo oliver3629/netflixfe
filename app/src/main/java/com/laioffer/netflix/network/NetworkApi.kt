@@ -1,6 +1,7 @@
 package com.laioffer.netflix.network
 
 import com.laioffer.netflix.datamodel.HomeResponse
+import com.laioffer.netflix.datamodel.ProfileResponse
 import com.laioffer.netflix.datamodel.VideoDetailRequest
 import com.laioffer.netflix.datamodel.VideoDetailResponse
 import retrofit2.Call
@@ -15,4 +16,7 @@ interface NetworkApi {
 
     @POST("/videoDetail")
     fun getDetail(@Body request: VideoDetailRequest): Call<VideoDetailResponse>
+
+    @GET("/profile")
+    fun getProfile(): Call<ProfileResponse>
 }

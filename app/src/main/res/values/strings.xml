@@ -9,4 +9,6 @@
     <string name="netflix_brand">NETFLIX</string>
     <string name="close">Close</string>
     <string name="episodes">Episodes</string>
+    <string name="recent_viewed">Recent Viewed</string>
+    <string name="favorites">Favorites</string>
 </resources>

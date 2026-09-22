@@ -10,12 +10,11 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Repository that hides Room details from the ViewModel.
+// Repository that hides Room details from the ViewModel
 @Singleton
 class FavoriteRepository @Inject constructor(
     private val favoriteDao: FavoriteDao
 ) {
-    // dispatch.io is not necessary here since room handles the thread while creating suspend, mostly remind purpose
     suspend fun addFavorite(video: Video) = withContext(Dispatchers.IO) {
         favoriteDao.insert(
             VideoEntity(
@@ -26,10 +25,13 @@ class FavoriteRepository @Inject constructor(
         )
     }
 
-    suspend fun removeFavorite(videoId: String) {
+    suspend fun removeFavorite(videoId: String) = withContext(Dispatchers.IO) {
         favoriteDao.deleteByVideoId(videoId)
     }
 
     fun isFavoriteFlow(videoId: String): Flow<Boolean> =
         favoriteDao.isFavorite(videoId).flowOn(Dispatchers.IO)
+
+    fun getAllFavorite(): Flow<List<VideoEntity>> =
+        favoriteDao.getAll().flowOn(Dispatchers.IO)
 }
