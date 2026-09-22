@@ -72,6 +72,9 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     // Media3 (ExoPlayer) for video
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.common)
 
     // Room
     implementation(libs.room.runtime)
