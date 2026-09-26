@@ -2,7 +2,7 @@
 
 An Android Netflix-style application built with Kotlin and Jetpack Compose. The app connects to the companion Ktor backend to display videos, profiles, favorites, and fullscreen playback.
 
-**Project Backend:** [Netflix_Backend](https://github.com/oliver3629/netflix) — the companion Ktor server that provides video, profile, and media data.
+**Project Backend:** [Netflix_Backend](https://github.com/oliver3629/Netflix_Backend) — the companion Ktor server that provides video, profile, and media data.
 
 ## Features
 
